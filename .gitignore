@@ -1,0 +1,26 @@
+# Archivos de Python compilados
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Archivos de entornos virtuales
+env/
+venv/
+ENV/
+VENV/
+
+# Archivos de configuración de IDEs
+.vscode/
+.idea/
+
+# Archivos de configuración de Python
+*.db
+*.sqlite3
+*.log
+*.bak
+*.swp
+
+# Archivos temporales
+*.tmp
+*.out

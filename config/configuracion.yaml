@@ -1,0 +1,175 @@
+
+# Configuración global
+global_settings:
+ # Configuración de ventana de tiempo para tomar de historia en el cálculo RFM
+  date_range:
+    interval: 'months'   # Puede ser: 'days', 'months', 'years' - Define el intervalo temporal que se utilizará para calcular el RFM.
+    number: 12           # Número de intervalos - Define cuántos intervalos de tiempo atrás considerar para el análisis. Por ejemplo, 12 meses atrás
+
+ # Configuración del rango de puntajes (Score)
+  score_range:
+    min: 1               # Puntaje mínimo - El valor mínimo del puntaje que se asignará a los clientes en el cálculo RFM.
+    max: 5               # Puntaje máximo - El valor máximo del puntaje para segmentar a los clientes.
+    step: 1              # Incremento de puntaje por nivel - Cuánto aumenta el puntaje entre cada categoría.
+
+  # Número de categorías para segmentar los clientes
+  num_categories: 5      # Define cuántas categorías o grupos se generarán durante la segmentación de clientes.
+
+   # Nombres de columnas a seleccionar para el cáluclo RFM
+  columns:
+    customer_id: "CustomerID"   # Columna que identifica a cada cliente en los datos.
+    date: "InvoiceDate"         # Columna que contiene la fecha de la transacción o compra.
+    invoice: "InvoiceNo"        # Columna con el identificador de la factura o transacción.
+    price: "UnitPrice"          # Columna con el monto de la transacción o precio de los productos adquiridos.
+
+# Configuración de las fuentes de datos
+data_sources:
+# Fuentes de datos en formato CSV
+  csv_sources:
+    sales_data:
+      path: "D:\\Usuarios\\carolinatorres\\OneDrive - Datecsa S.A\\Manar\\Analitica\\Repos\\rfm_project\\Data\\RFM_Data.csv" # Ruta del archivo CSV
+      delimiter: ","  # Delimitador de columnas, típicamente ',' para archivos CSV.
+      parse_dates: ["InvoiceDate"] # Especifica las columnas a las que se debe aplicar el tipo de dato 'fecha'.
+      select_columns: ["InvoiceNo", "InvoiceDate", "Quantity" ,"CustomerID", "UnitPrice"] # Columnas que se seleccionarán de los datos originales.
+
+    consolidated:
+      path: "D:\\Usuarios\\carolinatorres\\OneDrive - Datecsa S.A\\Manar\\Demo_RFM\\Pruebas\\rfm_project_1\\RFM\\RFM_Consolidated.csv"
+      delimiter: ","
+      #parse_dates: ["OrderDate"]
+      #select_columns: ["InvoiceNo", "InvoiceDate", "CustomerID", "UnitPrice"]
+
+# Fuentes de datos en formato Excel
+  excel_sources:
+    retail_data:
+      path: "D:\\Usuarios\\carolinatorres\\OneDrive - Datecsa S.A\\Manar\\Analitica\\Repos\\rfm_project\\Data\\RFM_Nov_2024.xlsx" # Ruta del archivo xlsx
+      sheet_name: "Online Retail" # Nombre de la hoja dentro del archivo Excel
+      parse_dates: ["InvoiceDate"]  # Especifica las columnas con fechas que deben ser convertidas a tipo de dato 'fecha'.
+      select_columns: ["InvoiceNo", "InvoiceDate", "Quantity", "CustomerID", "UnitPrice"] # Columnas a seleccionar en el análisis.
+
+# Fuentes de datos en formato Parquet
+  parquet_sources:
+    transactions_data:
+      path: "./data/transactions.parquet"
+
+# Preprocesamiento de datos
+preprocessing_steps:
+  retail_data:
+  # Paso 1: Manejo de valores faltantes
+    - step: "handle_missing_values"
+      params:
+        strategy:
+          CustomerID: 'drop' # Estrategia para manejar valores faltantes en la columna. Pueder ser: - 
+                             # - "drop": Elimina filas con valores nulos en la columna especificada 
+                             # - "mean": Reemplaza valores nulos con la media de la columna
+                             # - "median": Reemplaza valores nulos con la mediana de la columna
+                             # - "zero": Reemplaza valores nulos con el valor 0.
+
+  # Paso 2: Eliminar valores negativos en las columnas especificadas
+    - step: "remove_negative_values"
+      params:
+        columns:columns: ["UnitPrice"]  # Eliminar filas donde los valores en la columna sean negativos.
+
+      # Paso 3: Manejo de duplicados
+    - step: "handle_duplicates"
+      params:
+        subset: null #["column_1", "column_2"]  # Eliminar duplicados basados en column_1 y column_2. Si se especifica un conjunto de columnas, se eliminarán los duplicados basados en esas columnas.
+        keep: "first"  # Mantener solo el primer valor en caso de duplicados, eliminando los posteriores.
+
+    # Paso 4: Conversión de tipos de columnas
+    # Nombres de columnas con el tipo de dato al que debe ser convertido.
+    - step: "cast_column_types"
+      params:
+        cast_map:
+          CustomerID: 'int'
+          InvoiceDate: 'datetime'
+          UnitPrice: 'float'
+          InvoiceNo: 'str'
+
+# Preprocesamiento de Datos para otra fuente de datos (Ejemplo)
+  source_2:
+    - step: "handle_missing_values"
+      params:
+        strategy:
+          column_3: "median"  # Rellenar con la mediana
+          column_4: "zero"  # Rellenar con cero
+    - step: "remove_negative_values"
+      params:
+        columns:
+          - "column_3"  # Eliminar valores negativos en column_3
+    - step: "handle_duplicates"
+      params:
+        subset: ["column_3"]
+        keep: "last"  # Mantener solo el último duplicado
+    - step: "cast_column_types"
+      params:
+        cast_map:
+          column_3: "datetime"  # Convertir column_3 a tipo datetime
+          column_4: "int"  # Convertir column_4 a tipo int
+
+# Configuración específica por variable
+# Configuraciones necesarias para seleccionar el el método de manejo de outliers (LI y LI) y cálculo de puntos de corte para cada variable RFM. 
+variables:
+  Recency:
+    outlier_method: 'IQR'         # Método de manejo de outliers, puede ser: 'IQR', 'std_dev' o 'percentiles'
+    iqr_factor: 1.5               # Factor para el método IQR
+    std_dev_factor: 2             # Factor para el método std_dev
+    percentile_lower: 5           # Percentil inferior para el método percentiles
+    percentile_upper: 90          # Percentil superior para el método percentiles
+    breaks_method: 'jenks'        # Método para calcular breaks,puede ser : 'percentiles' o 'jenks'
+    percentiles_iqr: [25, 75, 90] # Percentiles adicionales para análisis IQR
+
+  Frequency:
+    outlier_method: 'IQR'
+    iqr_factor: 1.5
+    std_dev_factor: 1.5
+    percentile_lower: 10
+    percentile_upper: 90
+    breaks_method: 'jenks'
+    
+  Monetary:
+    outlier_method: 'IQR'
+    percentile_lower: 5
+    percentile_upper: 95
+    iqr_factor: 1.5
+    std_dev_factor: 1.5
+    breaks_method: 'jenks'
+
+# Método de cálculo del puntaje
+score_method: "combinacion"  # Método para calcular el puntaje de los clientes: 'combinación', 'suma' o 'promedio'.
+
+# Categorías de negocio basadas en los puntajes
+business_categories:
+  Platino: ['445', '454', '455', '544', '545', '554', '555'] 
+  Oro: ['344', '345', '353', '354', '355', '434', '443', '444', '453', '534', '535', '543', '553'] 
+  Plata: ['235', '244', '245', '252', '254', '255', '315', '324', '325', '334', '335', '343', '414', '415', '423', '424', '425', '433', '435', '442', '452', '514', '522', '523', '524', '525', '532', '533', '542', '552']
+  Bronce: ['122', '222', '224', '225', '231', '233', '234', '241', '242', '251', '322', '323', '333', '341', '342', '351', '352', '422', '431', '432', '441', '451', '515', '521', '531', '541', '551']
+  Ocasional: ['153', '211', '212', '213', '214', '215', '221', '223', '232', '253', '311', '312', '313', '314', '321', '331', '332', '411', '412', '413', '421', '511', '512', '513']
+  Abandonador: ['111', '112', '113', '114', '115', '121', '123', '124', '125', '131', '132', '133', '134', '135', '141', '142', '143', '144', '145', '151', '152', '154', '155', '243']
+  Nuevo: "ÚltimoMes"  # Clientes nuevos basados en la recencia
+
+# Exportar Resultados Finales del RFM
+export_settings:
+  # Formato CSV
+  csv_sources:
+    results_csv:
+      path: "D:\\Usuarios\\carolinatorres\\OneDrive - Datecsa S.A\\Manar\\Analitica\\Repos\\rfm_project\\RFM\\RFM_Consolidated_Jenks.csv"
+
+  # Formato Excel    
+  excel_sources:
+    results_excel:
+      path: "output/results.xlsx"
+  
+  # Formato Parquet
+  parquet_sources:
+    results_parquet:
+      path: "output/results.parquet"
+  
+  # SQL (Ejemplo)
+  sql_sources:
+    results_sql:
+      db_url: "postgresql://user:password@localhost:5432/mydatabase"
+      table_name: "rfm_results"
+
+
+
+ 
