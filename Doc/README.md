@@ -117,24 +117,19 @@ business_categories:
 ---
 ## 📊 Flujo de Trabajo
 
-**1. Ingestión de Datos:** data_loader.py valida y carga los datos desde las fuentes configuradas.
-
-**2. Preprocesamiento:** preprocessing.py limpia y transforma los datos para el análisis.
-
-**3. Cálculo de Métricas RFM:** rfm_calculator.py computa las métricas RFM.
-
-**4. Asignación Score:** rfm_processing.py Manejo de outliers, definición de puntos de corte y asignación de Score RFM.
-
-**5. Asignación de Segmentos:** segment_assigner.py clasifica a los clientes en segmentos comerciales según las puntuaciones RFM.
-
+**1. Ingestión de Datos:** data_loader.py valida y carga los datos desde las fuentes configuradas.<br>
+**2. Preprocesamiento:** preprocessing.py limpia y transforma los datos para el análisis<br>
+**3. Cálculo de Métricas RFM:** rfm_calculator.py computa las métricas RFM.<br>
+**4. Asignación Score:** rfm_processing.py Manejo de outliers, definición de puntos de corte y asignación de Score RFM.<br>
+**5. Asignación de Segmentos:** segment_assigner.py clasifica a los clientes en segmentos comerciales según las puntuaciones RFM.<br>
 **6. Exporte de Resultados:** exporter.py Los resultados finales (incluidas las categorías de clientes) se exportan en el formato especificado en el archivo de configuración para facilitar su integración con otros sistemas o su visualización en plataformas como Qlik.
 
 ---
 
 ## 📎 Recursos Adicionales
-**Documentación:** La carpeta Doc/ contiene guías y documentación.
-**Notebooks:** Utiliza la carpeta notebook/ para explorar los datos y realizar análisis adicionales.
-**Reportes:** Los resultados están diseñados para integrarse con herramientas como Qlik.
+- **Documentación:** La carpeta Doc/ contiene guías y documentación.
+- **Notebooks:** Utiliza la carpeta notebook/ para explorar los datos y realizar análisis adicionales.
+- **Reportes:** Los resultados están diseñados para integrarse con herramientas como Qlik.
 
 ---
 
